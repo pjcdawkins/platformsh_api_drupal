@@ -77,6 +77,11 @@ function platformsh_api_views_default_views() {
   $handler->display->display_options['fields']['project_link']['table'] = 'views_entity_platformsh_api_subscription';
   $handler->display->display_options['fields']['project_link']['field'] = 'project_link';
   $handler->display->display_options['fields']['project_link']['link_to_entity'] = 0;
+  /* Field: Platform.sh Subscription: Usage */
+  $handler->display->display_options['fields']['usage']['id'] = 'usage';
+  $handler->display->display_options['fields']['usage']['table'] = 'views_entity_platformsh_api_subscription';
+  $handler->display->display_options['fields']['usage']['field'] = 'usage';
+  $handler->display->display_options['fields']['usage']['link_to_entity'] = 0;
 
   /* Display: Embed */
   $handler = $view->new_display('embed', 'Embed', 'embed_1');

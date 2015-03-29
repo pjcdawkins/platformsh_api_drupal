@@ -22,6 +22,16 @@ class PlatformshApiSubscriptionMetadataController extends EntityDefaultMetadataC
       'sanitized' => TRUE,
     );
 
+    $properties['usage'] = array(
+      'label' => t('Usage'),
+      'description' => t('Usage information for the subscription.'),
+      'type' => 'text',
+      'getter callback' => 'platformsh_api_subscription_usage_getter',
+      'computed' => TRUE,
+      'entity views field' => TRUE,
+      'sanitized' => TRUE,
+    );
+
     return $info;
   }
 }

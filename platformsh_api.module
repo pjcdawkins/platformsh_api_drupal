@@ -260,3 +260,39 @@ function platformsh_api_subscription_project_link_getter(PlatformshApiSubscripti
   $title = empty($data['project_title']) ? $data['project_id'] : $data['project_title'];
   return l($title, $data['project_ui']);
 }
+
+/**
+ * @param \PlatformshApiSubscription $subscription
+ *
+ * @return \Platformsh\Client\Model\Subscription
+ */
+function platformsh_api_subscription_source_object(PlatformshApiSubscription $subscription) {
+  $client = platformsh_api_client();
+  return \Platformsh\Client\Model\Subscription::wrap(
+    $subscription->data,
+    $subscription->url,
+    $client->getConnector()->getClient()
+  );
+}
+
+/**
+ * @param \PlatformshApiSubscription $subscription
+ *
+ * @return string
+ */
+function platformsh_api_subscription_usage_getter(PlatformshApiSubscription $subscription) {
+  $source = platformsh_api_subscription_source_object($subscription);
+
+  $items = array();
+  $items['plan'] = t('Plan: @value', array('@value' => $source->plan));
+  $items['storage'] = t('Storage: @value GiB', array('@value' => $source->storage / 1024));
+  $items['environments'] = t('Environments: @value', array('@value' => $source->environments));
+  $items['users'] = t('User licenses: @value', array('@value' => $source->user_licenses));
+
+  $list = array(
+    '#theme' => 'item_list',
+    '#items' => $items,
+  );
+
+  return drupal_render($list);
+}
