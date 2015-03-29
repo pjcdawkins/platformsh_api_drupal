@@ -214,15 +214,10 @@ function platformsh_api_save_subscription(\Platformsh\Client\Model\Subscription 
   if (!empty($result['platformsh_api_subscription'])) {
     $subscription = entity_load_single('platformsh_api_subscription', key($result['platformsh_api_subscription']));
 
-    $original = clone $subscription;
     $subscription->uid = $account ? $account->uid : NULL;
     $subscription->url = $source->getUri();
     $subscription->data = $source->getData();
-
-    // Don't do anything if the subscription has not changed.
-    if ($original === $subscription) {
-      return TRUE;
-    }
+    $subscription->refreshed = REQUEST_TIME;
   }
   else {
     // Saving a new subscription.
