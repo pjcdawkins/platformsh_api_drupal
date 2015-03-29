@@ -62,9 +62,9 @@ function platformsh_api_list_subscriptions() {
   $rows = array();
   foreach ($subscriptions as $subscription) {
     $project = NULL;
-    if ($subscription->hasLink('project')) {
+    if ($subscription->getProperty('project_ui', FALSE)) {
       $title = $subscription->project_title ?: $subscription->project_id;
-      $project = l($title, $subscription->getLink('project'));
+      $project = l($title, $subscription->getProperty('project_ui'));
     }
 
     $row = array(
