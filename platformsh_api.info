@@ -1,0 +1,5 @@
+name = Platform.sh API
+description = Integrate with the Platform.sh API
+core = 7.x
+php = 5.4
+dependencies[] = composer_manager

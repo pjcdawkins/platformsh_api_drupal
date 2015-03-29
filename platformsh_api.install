@@ -1,0 +1,12 @@
+<?php
+/**
+ * @file
+ * Install/uninstall functions for the Platform.sh API module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function platformsh_api_uninstall() {
+  variable_del('platformsh_api_token');
+}

@@ -1,0 +1,121 @@
+<?php
+/**
+ * @file
+ * Platform.sh API module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function platformsh_api_menu() {
+  $items = array();
+  $items['admin/config/services/platform-sh'] = array(
+    'title' => 'Platform.sh',
+    'description' => 'Administer Platform.sh API integration.',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('platformsh_api_config_form'),
+    'file' => 'includes/platformsh_api.pages.inc',
+  );
+  $items['admin/structure/platform-sh'] = array(
+    'title' => 'Platform.sh',
+    'description' => 'Manage Platform.sh integration.',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'system_admin_menu_block_page',
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/structure/platform-sh/subscriptions'] = array(
+    'title' => 'Subscriptions',
+    'description' => 'List Platform.sh subscriptions.',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'platformsh_api_list_subscriptions',
+    'file' => 'includes/platformsh_api.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Get a client object.
+ *
+ * @param string $api_token
+ *   An API token. Defaults to the token set in the variable
+ *   'platformsh_api_token'.
+ *
+ * @return \Platformsh\Client\PlatformClient
+ *   A Platform.sh API client object.
+ */
+function platformsh_api_client($api_token = NULL) {
+  static $client;
+  if (!isset($client) || isset($api_token)) {
+    $connector = new \Platformsh\Client\Connection\Connector(array(
+      'api_token' => variable_get('platformsh_api_token', $api_token),
+    ));
+
+    $client = new \Platformsh\Client\PlatformClient($connector);
+  }
+
+  return $client;
+}
+
+/**
+ * Handle an exception from a bad API response.
+ *
+ * @param Exception $e
+ *   The Guzzle response exception.
+ */
+function platformsh_api_handle_exception(Exception $e) {
+  $settings_url = url('admin/config/services/platform-sh');
+  $params = array(
+    '@settings' => $settings_url,
+  );
+
+  if ($e instanceof \GuzzleHttp\Exception\BadResponseException) {
+    $response = $e->getResponse();
+    if ($response && $response->getStatusCode() === 401) {
+      drupal_set_message(
+        t('Unauthorized. Your Platform.sh <a href="@settings">API token</a> is probably invalid.', $params),
+        'error'
+      );
+      return;
+    }
+  }
+  elseif ($e instanceof RuntimeException && $e->getMessage() === 'Not logged in') {
+    drupal_set_message(
+      t('You need to set your Platform.sh <a href="@settings">API token</a>.', $params),
+      'error'
+    );
+    return;
+  }
+
+  throw $e;
+}
+
+/**
+ * Validate an API token.
+ *
+ * @param string $api_token
+ *   The API token to validate.
+ *
+ * @return bool
+ *   TRUE if the API token is valid, FALSE otherwise.
+ */
+function platformsh_api_validate_token($api_token) {
+  if (empty($api_token)) {
+    throw new \InvalidArgumentException('Empty API token');
+  }
+
+  $client = platformsh_api_client($api_token);
+  try {
+    $client->getAccountInfo();
+  }
+  catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    if ($e->getResponse() && $e->getResponse()->getStatusCode() === 401) {
+      return FALSE;
+    }
+    throw $e;
+  }
+
+  return TRUE;
+}
