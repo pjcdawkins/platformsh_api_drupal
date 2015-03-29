@@ -12,13 +12,14 @@ class PlatformshApiSubscriptionMetadataController extends EntityDefaultMetadataC
 
     $properties['refreshed']['type'] = 'date';
 
-    $properties['data'] = array(
-      'label' => t('Data'),
-      'description' => t('Subscription data.'),
-      'computed' => TRUE,
+    $properties['project_link'] = array(
+      'label' => t('Project'),
+      'description' => t('A link to the project.'),
       'type' => 'text',
-      'getter callback' => 'platformsh_api_subscription_data_getter',
+      'getter callback' => 'platformsh_api_subscription_project_link_getter',
+      'computed' => TRUE,
       'entity views field' => TRUE,
+      'sanitized' => TRUE,
     );
 
     return $info;

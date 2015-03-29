@@ -253,7 +253,12 @@ function platformsh_api_views_api() {
  *
  * @return string
  */
-function platformsh_api_subscription_data_getter(PlatformshApiSubscription $subscription) {
+function platformsh_api_subscription_project_link_getter(PlatformshApiSubscription $subscription) {
   $data = $subscription->data;
-  return print_r($data, TRUE);
+  if (empty($data['project_ui'])) {
+    return NULL;
+  }
+
+  $title = empty($data['project_title']) ? $data['project_id'] : $data['project_title'];
+  return l($title, $data['project_ui']);
 }

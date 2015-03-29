@@ -72,16 +72,11 @@ function platformsh_api_views_default_views() {
   $handler->display->display_options['fields']['created']['field'] = 'refreshed';
   $handler->display->display_options['fields']['created']['date_format'] = 'time ago';
   $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
-  /* Field: Platform.sh Subscription: Url */
-  $handler->display->display_options['fields']['url']['id'] = 'url';
-  $handler->display->display_options['fields']['url']['table'] = 'platformsh_api_subscription';
-  $handler->display->display_options['fields']['url']['field'] = 'url';
-  $handler->display->display_options['fields']['url']['label'] = 'URL';
-  /* Field: Platform.sh Subscription: Data */
-  $handler->display->display_options['fields']['data']['id'] = 'data';
-  $handler->display->display_options['fields']['data']['table'] = 'views_entity_platformsh_api_subscription';
-  $handler->display->display_options['fields']['data']['field'] = 'data';
-  $handler->display->display_options['fields']['data']['link_to_entity'] = 0;
+  /* Field: Platform.sh Subscription: Project */
+  $handler->display->display_options['fields']['project_link']['id'] = 'project_link';
+  $handler->display->display_options['fields']['project_link']['table'] = 'views_entity_platformsh_api_subscription';
+  $handler->display->display_options['fields']['project_link']['field'] = 'project_link';
+  $handler->display->display_options['fields']['project_link']['link_to_entity'] = 0;
 
   /* Display: Embed */
   $handler = $view->new_display('embed', 'Embed', 'embed_1');
