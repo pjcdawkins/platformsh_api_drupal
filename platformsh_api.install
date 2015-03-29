@@ -65,6 +65,7 @@ function platformsh_api_schema() {
     'primary key' => array('subscription_id'),
     'indexes' => array(
       'uid' => array('uid'),
+      'external_id' => array('external_id'),
     ),
     'unique keys' => array(
       'url' => array('url'),

@@ -205,11 +205,9 @@ function platformsh_api_refresh_subscriptions() {
  *   TRUE on success, FALSE otherwise.
  */
 function platformsh_api_save_subscription(\Platformsh\Client\Model\Subscription $source, $account = NULL) {
-  $url = $source->getUri();
-
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'platformsh_api_subscription');
-  $query->propertyCondition('url', $url);
+  $query->propertyCondition('external_id', $source->id);
   $result = $query->execute();
 
   // Updating an existing subscription.
@@ -218,7 +216,7 @@ function platformsh_api_save_subscription(\Platformsh\Client\Model\Subscription 
 
     $original = clone $subscription;
     $subscription->uid = $account ? $account->uid : NULL;
-    $subscription->external_id = $source->id;
+    $subscription->url = $source->getUri();
     $subscription->data = $source->getData();
 
     // Don't do anything if the subscription has not changed.
@@ -232,7 +230,7 @@ function platformsh_api_save_subscription(\Platformsh\Client\Model\Subscription 
       'uid' => $account ? $account->uid : NULL,
       'external_id' => $source->id,
       'type' => 'platformsh_project',
-      'url' => $url,
+      'url' => $source->getUri(),
       'data' => $source->getData(),
     );
     $subscription = entity_create('platformsh_api_subscription', $values);
