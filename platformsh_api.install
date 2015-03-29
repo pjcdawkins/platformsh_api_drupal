@@ -10,3 +10,71 @@
 function platformsh_api_uninstall() {
   variable_del('platformsh_api_token');
 }
+
+/**
+ * Implements hook_schema().
+ */
+function platformsh_api_schema() {
+  $tables = array();
+  $tables['platformsh_api_subscription'] = array(
+    'description' => 'The base table for subscriptions',
+    'fields' => array(
+      'subscription_id' => array(
+        'description' => 'Primary key: numeric subscription id.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'external_id' => array(
+        'description' => 'The external ID of the subscription resource.',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'type' => array(
+        'description' => 'The type of the subscription.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'platformsh_project',
+      ),
+      'url' => array(
+        'description' => 'The URL to the subscription resource.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'The {users}.uid of a user associated with the subscription.',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'data' => array(
+        'description' => 'Other data associated with the subscription.',
+        'type' => 'blob',
+        'size' => 'normal',
+        'not null' => FALSE,
+      ),
+      'created' => array(
+        'description' => 'The time when the subscription was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The time when the subscription was last changed.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('subscription_id'),
+    'indexes' => array(
+      'uid' => array('uid'),
+    ),
+    'unique keys' => array(
+      'url' => array('url'),
+    ),
+  );
+
+  return $tables;
+}

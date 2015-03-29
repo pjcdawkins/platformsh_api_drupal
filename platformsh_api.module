@@ -5,6 +5,38 @@
  */
 
 /**
+ * Implements hook_entity_info().
+ */
+function platformsh_api_entity_info() {
+  $items = array();
+  $items['platformsh_api_subscription'] = array(
+    'label' => t('Platform.sh Subscription'),
+    'controller class' => 'PlatformshApiSubscriptionController',
+    'entity class' => 'PlatformshApiSubscription',
+    'base table' => 'platformsh_api_subscription',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+      'id' => 'subscription_id',
+      'label' => 'external_id',
+      'bundle' => 'type',
+    ),
+    'module' => 'platformsh_api',
+    'access callback' => 'platformsh_api_subscription_access',
+    'metadata controller class' => 'PlatformshApiSubscriptionMetadataController',
+    'views controller class' => 'EntityDefaultViewsController',
+  );
+
+  return $items;
+}
+
+/**
+ * Entity access callback for a subscription.
+ */
+function platformsh_api_subscription_access($op, PlatformshApiSubscription $subscription = NULL, $account = NULL) {
+  return user_access('administer platform.sh subscriptions', $account);
+}
+
+/**
  * Implements hook_menu().
  */
 function platformsh_api_menu() {
@@ -118,4 +150,71 @@ function platformsh_api_validate_token($api_token) {
   }
 
   return TRUE;
+}
+
+/**
+ * Refresh the internally saved subscriptions.
+ */
+function platformsh_api_refresh_subscriptions() {
+  $client = platformsh_api_client();
+  try {
+    $subscriptions = $client->getSubscriptions();
+  }
+  catch (Exception $e) {
+    platformsh_api_handle_exception($e);
+    $subscriptions = array();
+  }
+
+  foreach ($subscriptions as $subscription) {
+    platformsh_api_save_subscription($subscription);
+  }
+}
+
+/**
+ * Save a subscription as an internal entity.
+ *
+ * @param \Platformsh\Client\Model\Subscription $source
+ *   The subscription object from the API client.
+ * @param object                                $account
+ *   The Drupal user account object to associate with the subscription
+ *   (optional).
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function platformsh_api_save_subscription(\Platformsh\Client\Model\Subscription $source, $account = NULL) {
+  $url = $source->getUri();
+
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'platformsh_api_subscription');
+  $query->propertyCondition('url', $url);
+  $result = $query->execute();
+
+  // Updating an existing subscription.
+  if (!empty($result['platformsh_api_subscription'])) {
+    $subscription = entity_load_single('platformsh_api_subscription', key($result['platformsh_api_subscription']));
+
+    $original = clone $subscription;
+    $subscription->uid = $account ? $account->uid : NULL;
+    $subscription->external_id = $source->id;
+    $subscription->data = $source->getData();
+
+    // Don't do anything if the subscription has not changed.
+    if ($original === $subscription) {
+      return TRUE;
+    }
+  }
+  else {
+    // Saving a new subscription.
+    $values = array(
+      'uid' => $account ? $account->uid : NULL,
+      'external_id' => $source->id,
+      'type' => 'platformsh_project',
+      'url' => $url,
+      'data' => $source->getData(),
+    );
+    $subscription = entity_create('platformsh_api_subscription', $values);
+  }
+
+  return $subscription->save();
 }
