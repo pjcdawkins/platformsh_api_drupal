@@ -48,48 +48,13 @@ function platformsh_api_config_form_validate(&$form, &$form_state) {
  * Page callback for listing subscriptions.
  */
 function platformsh_api_list_subscriptions() {
-  $client = platformsh_api_client();
-  try {
-    $subscriptions = $client->getSubscriptions();
-  }
-  catch (Exception $e) {
-    platformsh_api_handle_exception($e);
-    $subscriptions = array();
-  }
-
-  $header = array(t('ID'), t('Status'), t('Plan'), t('Cluster'), t('Project ID'), t('Project Title'));
-
-  $rows = array();
-  foreach ($subscriptions as $subscription) {
-    $project = NULL;
-    if ($subscription->getProperty('project_ui', FALSE)) {
-      $title = $subscription->project_title ?: $subscription->project_id;
-      $project = l($title, $subscription->getProperty('project_ui'));
-    }
-
-    $row = array(
-      check_plain($subscription->id),
-      check_plain($subscription->status),
-      check_plain($subscription->plan),
-      check_plain($subscription->project_cluster_label),
-      check_plain($subscription->project_id),
-      $project,
-    );
-    $rows[] = $row;
-  }
-
-  if (empty($rows)) {
-    $rows[0][0] = array(
-      'data' => t('No subscriptions found.'),
-      'colspan' => count($header),
-    );
-  }
+  $view = views_get_view('platformsh_api_subscriptions');
+  $view->override_path = current_path();
 
   $output = array(
-    'subscriptions' => array(
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
+    'refresh_form' => drupal_get_form('platformsh_api_refresh_subscriptions_form'),
+    'list' => array(
+      '#markup' => $view->preview('embed_1'),
     ),
   );
 

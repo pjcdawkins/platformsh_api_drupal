@@ -52,16 +52,11 @@ function platformsh_api_schema() {
         'description' => 'Other data associated with the subscription.',
         'type' => 'blob',
         'size' => 'normal',
+        'serialize' => TRUE,
         'not null' => FALSE,
       ),
-      'created' => array(
-        'description' => 'The time when the subscription was created.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'changed' => array(
-        'description' => 'The time when the subscription was last changed.',
+      'refreshed' => array(
+        'description' => 'The time when the subscription was last refreshed.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,

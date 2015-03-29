@@ -6,7 +6,6 @@ class PlatformshApiSubscription extends Entity {
   public $type;
   public $external_id;
   public $url;
-  public $created;
-  public $changed;
+  public $refreshed;
   public $data = array();
 }
