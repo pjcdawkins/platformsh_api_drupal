@@ -1,10 +1,10 @@
 <?php
 
-class PlatformshApiSubscriptionMetadataController extends EntityDefaultMetadataController {
+class PlatformshApiResourceMetadataController extends EntityDefaultMetadataController {
 
   public function entityPropertyInfo() {
     $info = parent::entityPropertyInfo();
-    $properties = &$info['platformsh_api_subscription']['properties'];
+    $properties = &$info['platformsh_api_resource']['properties'];
 
     $properties['url']['type'] = 'uri';
 
@@ -12,7 +12,10 @@ class PlatformshApiSubscriptionMetadataController extends EntityDefaultMetadataC
 
     $properties['refreshed']['type'] = 'date';
 
-    $properties['project_link'] = array(
+    $info['platformsh_api_resource']['bundles']['subscription']['properties'] = array();
+    $subscription_properties = &$info['platformsh_api_resource']['bundles']['subscription']['properties'];
+
+    $subscription_properties['project_link'] = array(
       'label' => t('Project'),
       'description' => t('A link to the project.'),
       'type' => 'text',
@@ -22,7 +25,7 @@ class PlatformshApiSubscriptionMetadataController extends EntityDefaultMetadataC
       'sanitized' => TRUE,
     );
 
-    $properties['usage'] = array(
+    $subscription_properties['usage'] = array(
       'label' => t('Usage'),
       'description' => t('Usage information for the subscription.'),
       'type' => 'text',

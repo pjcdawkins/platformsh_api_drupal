@@ -1,6 +1,6 @@
 <?php
 
-class PlatformshApiSubscriptionController extends EntityAPIController {
+class PlatformshApiResourceController extends EntityAPIController {
 
   /**
    * {@inheritdoc}

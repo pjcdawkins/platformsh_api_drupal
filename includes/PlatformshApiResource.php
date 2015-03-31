@@ -1,6 +1,6 @@
 <?php
 
-class PlatformshApiSubscription extends Entity {
+class PlatformshApiResource extends Entity {
 
   public $subscription_id;
   public $type;

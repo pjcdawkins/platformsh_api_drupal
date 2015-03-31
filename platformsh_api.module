@@ -9,30 +9,35 @@
  */
 function platformsh_api_entity_info() {
   $items = array();
-  $items['platformsh_api_subscription'] = array(
-    'label' => t('Platform.sh Subscription'),
-    'controller class' => 'PlatformshApiSubscriptionController',
-    'entity class' => 'PlatformshApiSubscription',
-    'base table' => 'platformsh_api_subscription',
+  $items['platformsh_api_resource'] = array(
+    'label' => t('Platform.sh Resource'),
+    'controller class' => 'PlatformshApiResourceController',
+    'entity class' => 'PlatformshApiResource',
+    'base table' => 'platformsh_api_resource',
     'fieldable' => TRUE,
     'entity keys' => array(
-      'id' => 'subscription_id',
+      'id' => 'resource_id',
       'label' => 'external_id',
       'bundle' => 'type',
     ),
     'module' => 'platformsh_api',
-    'access callback' => 'platformsh_api_subscription_access',
-    'metadata controller class' => 'PlatformshApiSubscriptionMetadataController',
+    'access callback' => 'platformsh_api_resource_access',
+    'metadata controller class' => 'PlatformshApiResourceMetadataController',
     'views controller class' => 'EntityDefaultViewsController',
+    'bundles' => array(
+      'subscription' => array(
+        'label' => t('Subscription'),
+      ),
+    ),
   );
 
   return $items;
 }
 
 /**
- * Entity access callback for a subscription.
+ * Entity access callback for a resource.
  */
-function platformsh_api_subscription_access($op, PlatformshApiSubscription $subscription = NULL, $account = NULL) {
+function platformsh_api_resource_access($op, PlatformshApiResource $resource = NULL, $account = NULL) {
   return user_access('administer platform.sh integration', $account);
 }
 
@@ -52,7 +57,7 @@ function platformsh_api_menu() {
   $items['admin/structure/platform-sh/subscriptions'] = array(
     'title' => 'Platform.sh subscriptions',
     'description' => 'List Platform.sh subscriptions.',
-    'access callback' => 'platformsh_api_subscription_access',
+    'access callback' => 'platformsh_api_resource_access',
     'access arguments' => array('view'),
     'page callback' => 'platformsh_api_list_subscriptions',
     'file' => 'includes/platformsh_api.pages.inc',
@@ -188,50 +193,52 @@ function platformsh_api_refresh_subscriptions() {
   }
 
   foreach ($subscriptions as $subscription) {
-    platformsh_api_save_subscription($subscription);
+    platformsh_api_save_resource($subscription, 'subscription');
   }
 }
 
 /**
- * Save a subscription as an internal entity.
+ * Save a resource as an internal entity.
  *
- * @param \Platformsh\Client\Model\Subscription $source
- *   The subscription object from the API client.
- * @param object                                $account
- *   The Drupal user account object to associate with the subscription
+ * @param \Platformsh\Client\Model\Resource $source
+ *   The resource object from the API client.
+ * @param string                            $type
+ *   The resource type.
+ * @param object                            $account
+ *   The Drupal user account object to associate with the resource
  *   (optional).
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function platformsh_api_save_subscription(\Platformsh\Client\Model\Subscription $source, $account = NULL) {
+function platformsh_api_save_resource(\Platformsh\Client\Model\Resource $source, $type, $account = NULL) {
   $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'platformsh_api_subscription');
-  $query->propertyCondition('external_id', $source->id);
+  $query->entityCondition('entity_type', 'platformsh_api_resource');
+  $query->propertyCondition('external_id', $source->getProperty('id'));
   $result = $query->execute();
 
-  // Updating an existing subscription.
-  if (!empty($result['platformsh_api_subscription'])) {
-    $subscription = entity_load_single('platformsh_api_subscription', key($result['platformsh_api_subscription']));
+  // Updating an existing resource.
+  if (!empty($result['platformsh_api_resource'])) {
+    $resource = entity_load_single('platformsh_api_resource', key($result['platformsh_api_resource']));
 
-    $subscription->uid = $account ? $account->uid : NULL;
-    $subscription->url = $source->getUri();
-    $subscription->data = $source->getData();
-    $subscription->refreshed = REQUEST_TIME;
+    $resource->uid = $account ? $account->uid : NULL;
+    $resource->url = $source->getUri();
+    $resource->data = $source->getData();
+    $resource->refreshed = REQUEST_TIME;
   }
   else {
-    // Saving a new subscription.
+    // Saving a new resource.
     $values = array(
       'uid' => $account ? $account->uid : NULL,
       'external_id' => $source->id,
-      'type' => 'platformsh_project',
+      'type' => $type,
       'url' => $source->getUri(),
       'data' => $source->getData(),
     );
-    $subscription = entity_create('platformsh_api_subscription', $values);
+    $resource = entity_create('platformsh_api_resource', $values);
   }
 
-  return $subscription->save();
+  return $resource->save();
 }
 
 /**
@@ -242,11 +249,11 @@ function platformsh_api_views_api() {
 }
 
 /**
- * @param \PlatformshApiSubscription $subscription
+ * @param \PlatformshApiResource $subscription
  *
  * @return string
  */
-function platformsh_api_subscription_project_link_getter(PlatformshApiSubscription $subscription) {
+function platformsh_api_subscription_project_link_getter(PlatformshApiResource $subscription) {
   $data = $subscription->data;
   if (empty($data['project_ui'])) {
     return NULL;
@@ -257,32 +264,34 @@ function platformsh_api_subscription_project_link_getter(PlatformshApiSubscripti
 }
 
 /**
- * @param \PlatformshApiSubscription $subscription
+ * @param \PlatformshApiResource $resource
  *
- * @return \Platformsh\Client\Model\Subscription
+ * @return \Platformsh\Client\Model\Resource
  */
-function platformsh_api_subscription_source_object(PlatformshApiSubscription $subscription) {
+function platformsh_api_subscription_source_object(PlatformshApiResource $resource) {
   $client = platformsh_api_client();
-  return \Platformsh\Client\Model\Subscription::wrap(
-    $subscription->data,
-    $subscription->url,
+  $className = '\\Platformsh\\Client\\Model\\' . $resource->type;
+  return $className::wrap(
+    $resource->data,
+    $resource->url,
     $client->getConnector()->getClient()
   );
 }
 
 /**
- * @param \PlatformshApiSubscription $subscription
+ * @param \PlatformshApiResource $resource
  *
  * @return string
  */
-function platformsh_api_subscription_usage_getter(PlatformshApiSubscription $subscription) {
-  $source = platformsh_api_subscription_source_object($subscription);
+function platformsh_api_subscription_usage_getter(PlatformshApiResource $resource) {
+  /** @var \Platformsh\Client\Model\Subscription $subscription */
+  $subscription = platformsh_api_subscription_source_object($resource);
 
   $items = array();
-  $items['plan'] = t('Plan: @value', array('@value' => $source->plan));
-  $items['storage'] = t('Storage: @value GiB', array('@value' => $source->storage / 1024));
-  $items['environments'] = t('Environments: @value', array('@value' => $source->environments));
-  $items['users'] = t('User licenses: @value', array('@value' => $source->user_licenses));
+  $items['plan'] = t('Plan: @value', array('@value' => $subscription->plan));
+  $items['storage'] = t('Storage: @value GiB', array('@value' => $subscription->storage / 1024));
+  $items['environments'] = t('Environments: @value', array('@value' => $subscription->environments));
+  $items['users'] = t('User licenses: @value', array('@value' => $subscription->user_licenses));
 
   $list = array(
     '#theme' => 'item_list',

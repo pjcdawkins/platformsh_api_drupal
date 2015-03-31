@@ -14,7 +14,7 @@ function platformsh_api_views_default_views() {
   $view->name = 'platformsh_api_subscriptions';
   $view->description = '';
   $view->tag = 'default';
-  $view->base_table = 'platformsh_api_subscription';
+  $view->base_table = 'platformsh_api_resource';
   $view->human_name = 'Subscriptions';
   $view->core = 7;
   $view->api_version = '3.0';
@@ -61,27 +61,34 @@ function platformsh_api_views_default_views() {
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'No subscriptions found.';
   $handler->display->display_options['empty']['area']['format'] = 'plain_text';
-  /* Field: Platform.sh Subscription: Label */
+  /* Field: Platform.sh Resource: Label */
   $handler->display->display_options['fields']['external_id']['id'] = 'external_id';
-  $handler->display->display_options['fields']['external_id']['table'] = 'platformsh_api_subscription';
+  $handler->display->display_options['fields']['external_id']['table'] = 'platformsh_api_resource';
   $handler->display->display_options['fields']['external_id']['field'] = 'external_id';
   $handler->display->display_options['fields']['external_id']['separator'] = '';
-  /* Field: Platform.sh Subscription: Refreshed */
+  /* Field: Platform.sh Resource: Refreshed */
   $handler->display->display_options['fields']['created']['id'] = 'created';
-  $handler->display->display_options['fields']['created']['table'] = 'platformsh_api_subscription';
+  $handler->display->display_options['fields']['created']['table'] = 'platformsh_api_resource';
   $handler->display->display_options['fields']['created']['field'] = 'refreshed';
   $handler->display->display_options['fields']['created']['date_format'] = 'time ago';
   $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
-  /* Field: Platform.sh Subscription: Project */
+  /* Field: Platform.sh Resource: Project */
   $handler->display->display_options['fields']['project_link']['id'] = 'project_link';
-  $handler->display->display_options['fields']['project_link']['table'] = 'views_entity_platformsh_api_subscription';
+  $handler->display->display_options['fields']['project_link']['table'] = 'views_entity_platformsh_api_resource';
   $handler->display->display_options['fields']['project_link']['field'] = 'project_link';
   $handler->display->display_options['fields']['project_link']['link_to_entity'] = 0;
-  /* Field: Platform.sh Subscription: Usage */
+  /* Field: Platform.sh Resource: Usage */
   $handler->display->display_options['fields']['usage']['id'] = 'usage';
-  $handler->display->display_options['fields']['usage']['table'] = 'views_entity_platformsh_api_subscription';
+  $handler->display->display_options['fields']['usage']['table'] = 'views_entity_platformsh_api_resource';
   $handler->display->display_options['fields']['usage']['field'] = 'usage';
   $handler->display->display_options['fields']['usage']['link_to_entity'] = 0;
+  /* Filter criterion: Platform.sh Resource: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'platformsh_api_resource';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'subscription' => 'subscription',
+  );
 
   /* Display: Embed */
   $handler = $view->new_display('embed', 'Embed', 'embed_1');

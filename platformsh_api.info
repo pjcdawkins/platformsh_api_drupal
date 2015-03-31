@@ -6,6 +6,6 @@ dependencies[] = composer_manager
 dependencies[] = entity
 dependencies[] = views
 
-files[] = includes/PlatformshApiSubscription.php
-files[] = includes/PlatformshApiSubscriptionController.php
-files[] = includes/PlatformshApiSubscriptionMetadataController.php
+files[] = includes/PlatformshApiResource.php
+files[] = includes/PlatformshApiResourceController.php
+files[] = includes/PlatformshApiResourceMetadataController.php
