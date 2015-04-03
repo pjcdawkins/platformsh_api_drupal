@@ -28,7 +28,12 @@ function platformsh_api_config_form($form, &$form_state) {
  * Validate the configuration form.
  */
 function platformsh_api_config_form_validate(&$form, &$form_state) {
-  $api_token = variable_get('platformsh_api_token', $form_state['values']['platformsh_api_token']);
+  if (!empty($form_state['values']['platformsh_api_token'])) {
+    $api_token = $form_state['values']['platformsh_api_token'];
+  }
+  else {
+    $api_token = variable_get('platformsh_api_token');
+  }
   if (!empty($api_token)) {
     if (platformsh_api_validate_token($api_token)) {
       drupal_set_message(t('The API token was successfully validated.'));

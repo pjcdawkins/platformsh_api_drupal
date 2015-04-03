@@ -109,7 +109,7 @@ function platformsh_api_client($api_token = NULL) {
   static $client;
   if (!isset($client) || isset($api_token)) {
     $connector = new \Platformsh\Client\Connection\Connector(array(
-      'api_token' => variable_get('platformsh_api_token', $api_token),
+      'api_token' => $api_token ?: variable_get('platformsh_api_token'),
     ));
 
     $client = new \Platformsh\Client\PlatformClient($connector);
