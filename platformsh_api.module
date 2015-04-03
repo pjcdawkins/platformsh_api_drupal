@@ -192,53 +192,84 @@ function platformsh_api_refresh_subscriptions() {
     $subscriptions = array();
   }
 
-  foreach ($subscriptions as $subscription) {
-    platformsh_api_save_resource($subscription, 'subscription');
-  }
+  platformsh_api_save_resources($subscriptions, 'subscription', TRUE);
 }
 
 /**
  * Save a resource as an internal entity.
  *
- * @param \Platformsh\Client\Model\Resource $source
- *   The resource object from the API client.
+ * @param \Platformsh\Client\Model\Resource[] $sources
+ *   The resource objects from the API client.
  * @param string                            $type
  *   The resource type.
+ * @param bool                              $complete
+ *   Whether the list is complete. If TRUE, saved resources missing in $sources
+ *   will be deleted.
  * @param object                            $account
- *   The Drupal user account object to associate with the resource
+ *   The Drupal user account object to associate with the resource(s)
  *   (optional).
- *
- * @return bool
- *   TRUE on success, FALSE otherwise.
  */
-function platformsh_api_save_resource(\Platformsh\Client\Model\Resource $source, $type, $account = NULL) {
+function platformsh_api_save_resources(array $sources, $type, $complete = FALSE, $account = NULL) {
+  /** @var \Platformsh\Client\Model\Resource[] $sources_by_id */
+  $sources_by_id = array();
+  foreach ($sources as $source) {
+    // @todo the property may not always be 'id'
+    $id = $source->getProperty('id');
+    $sources_by_id[$id] = $source;
+  }
+
+  $transaction = db_transaction(__FUNCTION__);
+  /** @var \PlatformshApiResourceController $controller */
+  $controller = entity_get_controller('platformsh_api_resource');
+
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'platformsh_api_resource');
-  $query->propertyCondition('external_id', $source->getProperty('id'));
+  $query->propertyCondition('type', $type);
+  $query->propertyCondition('external_id', array_keys($sources_by_id), 'IN');
   $result = $query->execute();
 
-  // Updating an existing resource.
+  // Updating existing resources.
+  $existing_resource_ids = array();
   if (!empty($result['platformsh_api_resource'])) {
-    $resource = entity_load_single('platformsh_api_resource', key($result['platformsh_api_resource']));
-
-    $resource->uid = $account ? $account->uid : NULL;
-    $resource->url = $source->getUri();
-    $resource->data = $source->getData();
-    $resource->refreshed = REQUEST_TIME;
+    $existing_resources = entity_load('platformsh_api_resource', array_keys($result['platformsh_api_resource']));
+    /** @var \PlatformshApiResource $resource */
+    foreach ($existing_resources as $resource) {
+      $existing_resource_ids[$resource->external_id] = $resource->external_id;
+      $source = $sources_by_id[$resource->external_id];
+      $resource->uid = $account ? $account->uid : NULL;
+      $resource->url = $source->getUri();
+      $resource->data = $source->getData();
+      $resource->refreshed = REQUEST_TIME;
+      $controller->save($resource, $transaction);
+    }
   }
-  else {
-    // Saving a new resource.
+
+  // Save new resources.
+  /** @var \Platformsh\Client\Model\Resource[] $new_sources */
+  $new_sources = array_diff_key($sources_by_id, $existing_resource_ids);
+  foreach ($new_sources as $id => $source) {
     $values = array(
       'uid' => $account ? $account->uid : NULL,
-      'external_id' => $source->id,
+      'external_id' => $id,
       'type' => $type,
       'url' => $source->getUri(),
       'data' => $source->getData(),
     );
     $resource = entity_create('platformsh_api_resource', $values);
+    $controller->save($resource, $transaction);
   }
 
-  return $resource->save();
+  // Delete old resources.
+  if ($complete) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'platformsh_api_resource');
+    $query->propertyCondition('type', $type);
+    $query->propertyCondition('external_id', array_keys($sources_by_id), 'NOT IN');
+    $result = $query->execute();
+    if (!empty($result['platformsh_api_resource'])) {
+      $controller->delete(array_keys($result['platformsh_api_resource']), $transaction);
+    }
+  }
 }
 
 /**

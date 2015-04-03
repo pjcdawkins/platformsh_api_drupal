@@ -8,6 +8,7 @@ class PlatformshApiResource extends Entity {
   public $url;
   public $refreshed;
   public $data = array();
+  public $uid;
 
   protected $source;
 
