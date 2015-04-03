@@ -266,26 +266,11 @@ function platformsh_api_subscription_project_link_getter(PlatformshApiResource $
 /**
  * @param \PlatformshApiResource $resource
  *
- * @return \Platformsh\Client\Model\Resource
- */
-function platformsh_api_subscription_source_object(PlatformshApiResource $resource) {
-  $client = platformsh_api_client();
-  $className = '\\Platformsh\\Client\\Model\\' . $resource->type;
-  return $className::wrap(
-    $resource->data,
-    $resource->url,
-    $client->getConnector()->getClient()
-  );
-}
-
-/**
- * @param \PlatformshApiResource $resource
- *
  * @return string
  */
 function platformsh_api_subscription_usage_getter(PlatformshApiResource $resource) {
   /** @var \Platformsh\Client\Model\Subscription $subscription */
-  $subscription = platformsh_api_subscription_source_object($resource);
+  $subscription = $resource->source();
 
   $items = array();
   $items['plan'] = t('Plan: @value', array('@value' => $subscription->plan));
