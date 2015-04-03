@@ -180,6 +180,51 @@ function platformsh_api_validate_token($api_token) {
 }
 
 /**
+ * Load a subscription by its ID.
+ *
+ * @param int $subscription_id
+ *   The subscription ID.
+ *
+ * @return \PlatformshApiResource
+ *   The subscription resource object, or FALSE on failure.
+ */
+function platformsh_api_get_subscription($subscription_id) {
+  $resource = platformsh_api_load_resource_by_external_id($subscription_id, 'subscription');
+  if ($resource) {
+    return $resource;
+  }
+
+  $client = platformsh_api_client();
+  $subscription = $client->getSubscription($subscription_id);
+  if (!$subscription) {
+    return FALSE;
+  }
+
+  platformsh_api_save_resources(array($subscription), 'subscription');
+  $resource = platformsh_api_load_resource_by_external_id($subscription_id, 'subscription');
+
+  return $resource ?: FALSE;
+}
+
+/**
+ * Load a resource by its external ID.
+ *
+ * @param int $id
+ *   The external ID from the API.
+ *
+ * @return \PlatformshApiResource|bool
+ *   The resource entity, or FALSE on failure.
+ */
+function platformsh_api_load_resource_by_external_id($id, $type) {
+  $resources = entity_load('platformsh_api_resource', FALSE, array(
+    'external_id' => $id,
+    'type' => $type,
+  ));
+
+  return $resources ? reset($resources) : FALSE;
+}
+
+/**
  * Refresh the internally saved subscriptions.
  */
 function platformsh_api_refresh_subscriptions() {

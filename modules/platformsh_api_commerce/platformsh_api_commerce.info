@@ -1,0 +1,5 @@
+name = Platform.sh API Commerce
+description = Sell Platform.sh subscriptions.
+core = 7.x
+dependencies[] = platformsh_api
+dependencies[] = commerce_license
