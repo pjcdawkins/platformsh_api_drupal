@@ -210,6 +210,10 @@ function platformsh_api_refresh_subscriptions() {
  *   (optional).
  */
 function platformsh_api_save_resources(array $sources, $type, $complete = FALSE, $account = NULL) {
+  if (empty($sources)) {
+    return;
+  }
+
   /** @var \Platformsh\Client\Model\Resource[] $sources_by_id */
   $sources_by_id = array();
   foreach ($sources as $source) {
@@ -224,7 +228,7 @@ function platformsh_api_save_resources(array $sources, $type, $complete = FALSE,
 
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'platformsh_api_resource');
-  $query->propertyCondition('type', $type);
+  $query->entityCondition('bundle', $type);
   $query->propertyCondition('external_id', array_keys($sources_by_id), 'IN');
   $result = $query->execute();
 
@@ -263,7 +267,7 @@ function platformsh_api_save_resources(array $sources, $type, $complete = FALSE,
   if ($complete) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'platformsh_api_resource');
-    $query->propertyCondition('type', $type);
+    $query->entityCondition('bundle', $type);
     $query->propertyCondition('external_id', array_keys($sources_by_id), 'NOT IN');
     $result = $query->execute();
     if (!empty($result['platformsh_api_resource'])) {
