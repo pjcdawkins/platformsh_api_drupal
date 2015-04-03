@@ -2,7 +2,7 @@
 
 class PlatformshApiResource extends Entity {
 
-  public $subscription_id;
+  public $resource_id;
   public $type;
   public $external_id;
   public $url;
