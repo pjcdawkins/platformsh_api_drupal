@@ -1,0 +1,14 @@
+<?php
+/**
+ * @file
+ * Platform.sh API Commerce integration module.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function platformsh_api_commerce_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'commerce_license') {
+    return 'plugins/' . $plugin;
+  }
+}
