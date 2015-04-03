@@ -34,7 +34,7 @@ class PlatformshApiResource extends Entity {
   public function source() {
     if (!isset($this->source)) {
       $client = platformsh_api_client();
-      $className = '\\Platformsh\\Client\\Model\\' . $this->type;
+      $className = '\\Platformsh\\Client\\Model\\' . ucfirst($this->type);
       if (!class_exists($className)) {
         throw new \Exception("Model class not found: $className");
       }
