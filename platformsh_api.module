@@ -210,10 +210,6 @@ function platformsh_api_refresh_subscriptions() {
  *   (optional).
  */
 function platformsh_api_save_resources(array $sources, $type, $complete = FALSE, $account = NULL) {
-  if (empty($sources)) {
-    return;
-  }
-
   /** @var \Platformsh\Client\Model\Resource[] $sources_by_id */
   $sources_by_id = array();
   foreach ($sources as $source) {
@@ -226,15 +222,18 @@ function platformsh_api_save_resources(array $sources, $type, $complete = FALSE,
   /** @var \PlatformshApiResourceController $controller */
   $controller = entity_get_controller('platformsh_api_resource');
 
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'platformsh_api_resource');
-  $query->entityCondition('bundle', $type);
-  $query->propertyCondition('external_id', array_keys($sources_by_id), 'IN');
-  $result = $query->execute();
+  $result = array();
+  if (!empty($sources_by_id)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'platformsh_api_resource');
+    $query->entityCondition('bundle', $type);
+    $query->propertyCondition('external_id', array_keys($sources_by_id), 'IN');
+    $result = $query->execute();
+  }
 
   // Updating existing resources.
   $existing_resource_ids = array();
-  if (!empty($result['platformsh_api_resource'])) {
+  if (isset($result) && !empty($result['platformsh_api_resource'])) {
     $existing_resources = entity_load('platformsh_api_resource', array_keys($result['platformsh_api_resource']));
     /** @var \PlatformshApiResource $resource */
     foreach ($existing_resources as $resource) {
@@ -268,7 +267,9 @@ function platformsh_api_save_resources(array $sources, $type, $complete = FALSE,
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'platformsh_api_resource');
     $query->entityCondition('bundle', $type);
-    $query->propertyCondition('external_id', array_keys($sources_by_id), 'NOT IN');
+    if (!empty($sources_by_id)) {
+      $query->propertyCondition('external_id', array_keys($sources_by_id), 'NOT IN');
+    }
     $result = $query->execute();
     if (!empty($result['platformsh_api_resource'])) {
       $controller->delete(array_keys($result['platformsh_api_resource']), $transaction);
