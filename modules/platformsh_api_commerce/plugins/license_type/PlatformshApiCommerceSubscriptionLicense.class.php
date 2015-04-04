@@ -10,6 +10,9 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    * Implements EntityBundlePluginProvideFieldsInterface::fields().
    */
   static function fields() {
+    // This may run on install. We will need the library dependency.
+    composer_manager_register_autoloader();
+
     $fields = parent::fields();
     // Reference to the subscription.
     $fields['platformsh_license_subscription']['field'] = array(
