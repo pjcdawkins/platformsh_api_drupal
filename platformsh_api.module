@@ -403,5 +403,6 @@ function platformsh_api_subscription_cluster_options_list() {
  *   keys are machine names.
  */
 function platformsh_api_subscription_plan_options_list() {
-  return array_map('ucfirst', \Platformsh\Client\Model\Subscription::$availablePlans);
+  $plans = \Platformsh\Client\Model\Subscription::$availablePlans;
+  return array_combine($plans, array_map('ucfirst', $plans));
 }
