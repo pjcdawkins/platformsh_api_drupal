@@ -247,7 +247,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       watchdog('platformsh_api_commerce', 'Failed to create subscription for license @id: @message', array(
         '@id' => $this->license_id,
         '@message' => $message,
-      ));
+      ), WATCHDOG_ERROR);
       return;
     }
 
@@ -255,6 +255,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     $resource = platformsh_api_load_resource_by_external_id($subscription->id, 'subscription');
     if (!$resource) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED_RETRY;
+      // This should never happen.
       throw new \RuntimeException('Failed to create subscription');
     }
 
