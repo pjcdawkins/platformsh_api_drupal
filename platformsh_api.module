@@ -108,9 +108,16 @@ function platformsh_api_refresh_subscriptions_form_submit(&$form, &$form_state) 
 function platformsh_api_client($api_token = NULL) {
   static $client;
   if (!isset($client) || isset($api_token)) {
-    $connector = new \Platformsh\Client\Connection\Connector(array(
+    $config = array(
       'api_token' => $api_token ?: variable_get('platformsh_api_token'),
-    ));
+    );
+
+    if ($accounts_url = variable_get('platformsh_api_accounts_url')) {
+      $config['accounts'] = $accounts_url;
+      $config['verify'] = variable_get('platformsh_api_accounts_verify', TRUE);
+    }
+
+    $connector = new \Platformsh\Client\Connection\Connector($config);
 
     $client = new \Platformsh\Client\PlatformClient($connector);
   }

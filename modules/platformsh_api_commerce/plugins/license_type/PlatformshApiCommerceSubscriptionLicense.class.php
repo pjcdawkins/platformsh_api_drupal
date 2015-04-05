@@ -142,16 +142,30 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       '@id2' => $subscription_resource->external_id,
     ));
 
+    /** @var \Platformsh\Client\Model\Subscription $subscription */
+    $subscription = $subscription_resource->source();
+
+    $subscription->refresh();
+    $this->setSyncStatusFromSubscription($subscription);
+
+    $this->save();
+
+    watchdog('platformsh_api_commerce', 'Synced. Subscription status: @status1, license status: @status2', array(
+      '@status1' => $subscription->getStatus(),
+      '@status2' => $this->wrapper()->sync_status->value(),
+    ));
+  }
+
+  /**
+   * @param \Platformsh\Client\Model\Subscription $subscription
+   */
+  protected function setSyncStatusFromSubscription(\Platformsh\Client\Model\Subscription $subscription) {
     $failed_statuses = array(
       \Platformsh\Client\Model\Subscription::STATUS_FAILED,
       \Platformsh\Client\Model\Subscription::STATUS_DELETED,
       \Platformsh\Client\Model\Subscription::STATUS_SUSPENDED,
     );
 
-    /** @var \Platformsh\Client\Model\Subscription $subscription */
-    $subscription = $subscription_resource->source();
-
-    $subscription->refresh();
     if ($subscription->isActive()) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNCED;
     }
@@ -161,13 +175,6 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     elseif (in_array($subscription->getStatus(), $failed_statuses)) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED;
     }
-
-    $this->save();
-
-    watchdog('platformsh_api_commerce', 'Synced. Subscription status: @status1, license status: @status2', array(
-      '@status1' => $subscription->getStatus(),
-      '@status2' => $this->wrapper()->sync_status->value(),
-    ));
   }
 
   /**
@@ -215,11 +222,13 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     }
 
     platformsh_api_save_resources(array($subscription), 'subscription', FALSE, $this->wrapper()->owner->value());
-
     $resource = platformsh_api_load_resource_by_external_id($subscription->id, 'subscription');
     if (!$resource) {
+      $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED_RETRY;
       throw new \RuntimeException('Failed to create subscription');
     }
+
+    $this->setSyncStatusFromSubscription($subscription);
 
     $this->wrapper()->platformsh_license_subscription = $resource;
 
