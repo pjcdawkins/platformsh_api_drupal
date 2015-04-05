@@ -5,6 +5,23 @@
  */
 
 /**
+ * Implements hook_menu().
+ */
+function platformsh_api_commerce_menu() {
+  $items = array();
+  $items['platformsh/activation-callback/%commerce_license'] = array(
+    'title' => 'Subscription activation callback',
+    'page callback' => 'platformsh_api_commerce_activation_callback',
+    'page arguments' => array(2),
+    'access callback' => 'platformsh_api_commerce_activation_callback_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/platformsh_api_commerce.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
  * Implements hook_ctools_plugin_directory().
  */
 function platformsh_api_commerce_ctools_plugin_directory($module, $plugin) {
@@ -21,4 +38,34 @@ function platformsh_api_commerce_field_access($op, $field, $entity_type, $entity
   if ($entity_type == 'commerce_license' && $field['field_name'] == 'platformsh_license_subscription') {
     return FALSE;
   }
+}
+
+/**
+ * Generate a token to validate the activation callback.
+ *
+ * @param \CommerceLicenseBase $license
+ *   The subscription license entity.
+ *
+ * @return string
+ *   A token.
+ */
+function platformsh_api_commerce_get_token(\CommerceLicenseBase $license) {
+  $data = serialize($license->license_id, $license->uid);
+  $key = drupal_get_private_key() . '-' . drupal_get_hash_salt();
+  return drupal_hmac_base64($data, $key);
+}
+
+/**
+ * Validate a token in the activation callback.
+ *
+ * @param string $token
+ *   A token passed in the activation callback.
+ * @param \CommerceLicenseBase $license
+ *   The subscription license entity.
+ *
+ * @return bool
+ *   TRUE if valid, FALSE otherwise.
+ */
+function platformsh_api_commerce_validate_token($token, \CommerceLicenseBase $license) {
+  return $token === platformsh_api_commerce_get_token($license);
 }

@@ -154,7 +154,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     $subscription = $subscription_resource->source();
 
     $subscription->refresh();
-    $this->setSyncStatusFromSubscription($subscription);
+    $this->setStatusFromSubscription($subscription);
 
     $this->save();
 
@@ -165,9 +165,19 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
   }
 
   /**
+   * Get the subscription associated with this license.
+   *
+   * @return \PlatformshApiResource|bool
+   *   The subscription resource entity, or FALSE on failure.
+   */
+  public function getSubscription() {
+    return $this->wrapper()->platformsh_license_subscription->value();
+  }
+
+  /**
    * @param \Platformsh\Client\Model\Subscription $subscription
    */
-  protected function setSyncStatusFromSubscription(\Platformsh\Client\Model\Subscription $subscription) {
+  public function setStatusFromSubscription(\Platformsh\Client\Model\Subscription $subscription) {
     $failed_statuses = array(
       \Platformsh\Client\Model\Subscription::STATUS_FAILED,
       \Platformsh\Client\Model\Subscription::STATUS_DELETED,
@@ -176,9 +186,11 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
 
     if ($subscription->isActive()) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNCED;
+      $this->status = COMMERCE_LICENSE_ACTIVE;
     }
     elseif ($subscription->isPending()) {
-      $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED_RETRY;
+      $this->wrapper()->sync_status = COMMERCE_LICENSE_NEEDS_SYNC;
+      $this->status = COMMERCE_LICENSE_PENDING;
     }
     elseif (in_array($subscription->getStatus(), $failed_statuses)) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED;
@@ -198,6 +210,18 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
 
     $client = platformsh_api_client();
 
+    $activation_callback = NULL;
+    if (variable_get('platformsh_api_commerce_use_callback', TRUE)) {
+      $activation_callback = array(
+        'uri' => url('platformsh/activation-callback/' . $this->license_id, array(
+          'absolute' => TRUE,
+          'query' => array(
+            'token' => platformsh_api_commerce_get_token($this),
+          ),
+        )),
+      );
+    }
+
     try {
       $subscription = $client->createSubscription(
         $this->wrapper()->platformsh_license_cluster->value(),
@@ -205,14 +229,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
         $this->wrapper()->platformsh_license_project_title->value() ?: NULL,
         NULL,
         NULL,
-        array(
-          'uri' => url('platformsh-api/callback/' . $this->license_id, array(
-            'absolute' => TRUE,
-            'query' => array(
-              'token' => drupal_get_token(),
-            ),
-          )),
-        )
+        $activation_callback
       );
     } catch (\Exception $e) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED_RETRY;
@@ -241,7 +258,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       throw new \RuntimeException('Failed to create subscription');
     }
 
-    $this->setSyncStatusFromSubscription($subscription);
+    $this->setStatusFromSubscription($subscription);
 
     $this->wrapper()->platformsh_license_subscription = $resource;
 
