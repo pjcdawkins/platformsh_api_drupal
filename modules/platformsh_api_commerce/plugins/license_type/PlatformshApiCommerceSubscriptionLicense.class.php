@@ -117,8 +117,9 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    */
   public function synchronize() {
     switch ($this->status) {
+      case COMMERCE_LICENSE_CREATED:
       case COMMERCE_LICENSE_PENDING:
-      case COMMERCE_LICENSE_SYNC_FAILED_RETRY:
+      case COMMERCE_LICENSE_ACTIVE:
         if ($resource = $this->wrapper()->platformsh_license_subscription->value()) {
           $this->synchronizeExistingSubscription($resource);
         }
@@ -127,10 +128,11 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
         }
         return TRUE;
 
+      case COMMERCE_LICENSE_EXPIRED:
       case COMMERCE_LICENSE_REVOKED:
         return $this->deleteSubscription();
 
-      case COMMERCE_LICENSE_EXPIRED:
+      case COMMERCE_LICENSE_SUSPENDED:
       default:
         return FALSE;
     }
@@ -277,5 +279,30 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     }
 
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}.
+   */
+  public function checkoutCompletionMessage() {
+    $message = '';
+    $sync_status = $this->wrapper->sync_status->value();
+    switch ($sync_status) {
+      case COMMERCE_LICENSE_NEEDS_SYNC:
+        $message = t("Please wait while we create your Platform.sh project.");
+        break;
+      case COMMERCE_LICENSE_SYNCED:
+        $message = t('Your Platform.sh project has been successfully created.');
+        $message .= '<br />' . $this->accessDetails();
+        break;
+      case COMMERCE_LICENSE_SYNC_FAILED_RETRY:
+        $message = t('Your Platform.sh project has been queued for processing.');
+        break;
+      case COMMERCE_LICENSE_SYNC_FAILED:
+        $message = t('Synchronization failed. Details have been logged.');
+        break;
+    }
+
+    return $message;
   }
 }
