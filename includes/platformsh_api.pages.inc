@@ -34,11 +34,11 @@ function platformsh_api_config_form($form, &$form_state) {
     '#default_value' => variable_get('platformsh_api_accounts_url'),
     '#required' => FALSE,
   );
-  $form['advanced']['platformsh_api_accounts_verify'] = array(
+  $form['advanced']['platformsh_api_accounts_skip_ssl'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Verify SSL'),
-    '#default_value' => variable_get('platformsh_api_accounts_verify', TRUE),
-    '#description' => t('This should be enabled in all normal circumstances.'),
+    '#title' => t('Skip SSL verification'),
+    '#default_value' => variable_get('platformsh_api_accounts_skip_ssl'),
+    '#description' => t('Insecure: this option should never normally be enabled.'),
   );
 
   return system_settings_form($form);

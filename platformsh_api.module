@@ -114,7 +114,7 @@ function platformsh_api_client($api_token = NULL) {
 
     if ($accounts_url = variable_get('platformsh_api_accounts_url')) {
       $config['accounts'] = $accounts_url;
-      $config['verify'] = variable_get('platformsh_api_accounts_verify', TRUE);
+      $config['verify'] = !variable_get('platformsh_api_accounts_skip_ssl');
     }
 
     $connector = new \Platformsh\Client\Connection\Connector($config);
