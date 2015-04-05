@@ -217,6 +217,11 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     } catch (\Exception $e) {
       $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED_RETRY;
 
+      // If the error is an internal, code-related, one, don't retry.
+      if ($e instanceof \InvalidArgumentException) {
+        $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED;
+      }
+
       $message = $e->getMessage();
       if ($message == 'Not logged in') {
         $message = 'API token not configured';
