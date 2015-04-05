@@ -112,6 +112,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
   public function synchronize() {
     switch ($this->status) {
       case COMMERCE_LICENSE_PENDING:
+      case COMMERCE_LICENSE_SYNC_FAILED_RETRY:
         if ($resource = $this->wrapper()->platformsh_license_subscription->value()) {
           $this->synchronizeExistingSubscription($resource);
         }
@@ -136,6 +137,11 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    *   The subscription resource entity.
    */
   protected function synchronizeExistingSubscription(\PlatformshApiResource $subscription_resource) {
+    watchdog('platformsh_api_commerce', 'Syncing license @id1 with existing subscription @id2', array(
+      '@id1' => $this->license_id,
+      '@id2' => $subscription_resource->external_id,
+    ));
+
     $failed_statuses = array(
       \Platformsh\Client\Model\Subscription::STATUS_FAILED,
       \Platformsh\Client\Model\Subscription::STATUS_DELETED,
@@ -157,6 +163,11 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     }
 
     $this->save();
+
+    watchdog('platformsh_api_commerce', 'Synced. Subscription status: @status1, license status: @status2', array(
+      '@status1' => $subscription->getStatus(),
+      '@status2' => $this->wrapper()->sync_status->value(),
+    ));
   }
 
   /**
@@ -166,22 +177,43 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    *   If the subscription cannot be created.
    */
   protected function createNewSubscription() {
+    watchdog('platformsh_api_commerce', 'Creating subscription for license @id', array(
+      '@id' => $this->license_id,
+    ));
+
     $client = platformsh_api_client();
-    $subscription = $client->createSubscription(
-      $this->wrapper()->platformsh_license_cluster->value(),
-      $this->wrapper()->platformsh_license_plan->value(),
-      $this->wrapper()->platformsh_license_project_title->value() ?: NULL,
-      NULL,
-      NULL,
-      array(
-        'uri' => url('platformsh-api/callback/' . $this->license_id, array(
-          'absolute' => TRUE,
-          'query' => array(
-            'token' => drupal_get_token(),
-          ),
-        )),
-      )
-    );
+
+    try {
+      $subscription = $client->createSubscription(
+        $this->wrapper()->platformsh_license_cluster->value(),
+        $this->wrapper()->platformsh_license_plan->value(),
+        $this->wrapper()->platformsh_license_project_title->value() ?: NULL,
+        NULL,
+        NULL,
+        array(
+          'uri' => url('platformsh-api/callback/' . $this->license_id, array(
+            'absolute' => TRUE,
+            'query' => array(
+              'token' => drupal_get_token(),
+            ),
+          )),
+        )
+      );
+    } catch (\Exception $e) {
+      $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED_RETRY;
+
+      $message = $e->getMessage();
+      if ($message == 'Not logged in') {
+        $message = 'API token not configured';
+      }
+
+      watchdog('platformsh_api_commerce', 'Failed to create subscription for license @id: @message', array(
+        '@id' => $this->license_id,
+        '@message' => $message,
+      ));
+      return;
+    }
+
     platformsh_api_save_resources(array($subscription), 'subscription', FALSE, $this->wrapper()->owner->value());
 
     $resource = platformsh_api_load_resource_by_external_id($subscription->id, 'subscription');
@@ -192,6 +224,11 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     $this->wrapper()->platformsh_license_subscription = $resource;
 
     $this->save();
+
+    watchdog('platformsh_api_commerce', 'Created. License @id1, subscription @id2', array(
+      '@id1' => $this->license_id,
+      '@id2' => $subscription->id,
+    ));
   }
 
   /**
@@ -202,9 +239,20 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    */
   protected function deleteSubscription() {
     if ($resource = $this->wrapper()->platformsh_license_subscription->value()) {
+
+      watchdog('platformsh_api_commerce', 'Deleting subscription. License @id1, subscription @id2', array(
+        '@id1' => $this->license_id,
+        '@id2' => $resource->external_id,
+      ));
+
       try {
         $resource->source()->delete();
         $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNCED;
+
+        watchdog('platformsh_api_commerce', 'Deleted. License @id1, subscription @id2', array(
+          '@id1' => $this->license_id,
+          '@id2' => $resource->external_id,
+        ));
       } catch (\GuzzleHttp\Exception\BadResponseException $e) {
         $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED;
       }
