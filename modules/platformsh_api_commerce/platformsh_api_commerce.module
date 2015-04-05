@@ -14,6 +14,7 @@ function platformsh_api_commerce_menu() {
     'page callback' => 'platformsh_api_commerce_activation_callback',
     'page arguments' => array(2),
     'access callback' => 'platformsh_api_commerce_activation_callback_access',
+    'access arguments' => array(2),
     'type' => MENU_CALLBACK,
     'file' => 'includes/platformsh_api_commerce.pages.inc',
   );
