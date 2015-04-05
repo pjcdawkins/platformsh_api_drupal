@@ -9,6 +9,8 @@
  */
 function platformsh_api_uninstall() {
   variable_del('platformsh_api_token');
+  variable_del('platformsh_api_accounts_url');
+  variable_del('platformsh_api_accounts_verify');
 }
 
 /**

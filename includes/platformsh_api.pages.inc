@@ -21,6 +21,26 @@ function platformsh_api_config_form($form, &$form_state) {
       . t('Leave blank to use the already set token.');
   }
 
+  $form['advanced'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => variable_get('platformsh_api_accounts_url') == NULL,
+  );
+  $form['advanced']['platformsh_api_accounts_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Accounts site URL'),
+    '#description' => t('Leave blank to use the default.'),
+    '#default_value' => variable_get('platformsh_api_accounts_url'),
+    '#required' => FALSE,
+  );
+  $form['advanced']['platformsh_api_accounts_verify'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Verify SSL'),
+    '#default_value' => variable_get('platformsh_api_accounts_verify', TRUE),
+    '#description' => t('This should be enabled in all normal circumstances.'),
+  );
+
   return system_settings_form($form);
 }
 
