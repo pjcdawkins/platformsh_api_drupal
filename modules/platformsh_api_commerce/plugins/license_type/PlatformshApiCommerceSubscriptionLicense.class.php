@@ -87,6 +87,16 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isConfigurable() {
+    // Allow the user to configure license fields on the Add to Cart form.
+    // See the Commerce License docs: https://www.drupal.org/node/2039687
+    // @todo hide subscription field
+    return TRUE;
+  }
+
+  /**
    * Implements CommerceLicenseInterface::accessDetails().
    */
   public function accessDetails() {
