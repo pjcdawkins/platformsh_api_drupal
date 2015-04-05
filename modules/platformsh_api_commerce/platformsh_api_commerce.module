@@ -51,7 +51,7 @@ function platformsh_api_commerce_field_access($op, $field, $entity_type, $entity
  *   A token.
  */
 function platformsh_api_commerce_get_token(\CommerceLicenseBase $license) {
-  $data = serialize($license->license_id, $license->uid);
+  $data = serialize(array($license->license_id, $license->uid));
   $key = drupal_get_private_key() . '-' . drupal_get_hash_salt();
   return drupal_hmac_base64($data, $key);
 }
