@@ -12,3 +12,13 @@ function platformsh_api_commerce_ctools_plugin_directory($module, $plugin) {
     return 'plugins/' . $plugin;
   }
 }
+
+/**
+ * Implements hook_field_access().
+ */
+function platformsh_api_commerce_field_access($op, $field, $entity_type, $entity, $account) {
+  // Prevent access to edit the subscription reference field in the UI.
+  if ($entity_type == 'commerce_license' && $field['field_name'] == 'platformsh_license_subscription') {
+    return FALSE;
+  }
+}

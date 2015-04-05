@@ -10,9 +10,6 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    * Implements EntityBundlePluginProvideFieldsInterface::fields().
    */
   static function fields() {
-    // This may run on install. We will need the library dependency.
-    composer_manager_register_autoloader();
-
     $fields = parent::fields();
     // Reference to the subscription.
     $fields['platformsh_license_subscription']['field'] = array(
@@ -37,7 +34,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       'module' => 'list',
       'type' => 'list_text',
       'settings' => array(
-        'allowed_values' => drupal_map_assoc(\Platformsh\Client\Model\Subscription::$availableClusters),
+        'allowed_values_function' => 'platformsh_api_subscription_cluster_options_list',
       ),
     );
     $fields['platformsh_license_cluster']['instance'] = array(
@@ -57,7 +54,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       'module' => 'list',
       'type' => 'list_text',
       'settings' => array(
-        'allowed_values' => drupal_map_assoc(\Platformsh\Client\Model\Subscription::$availablePlans),
+        'allowed_values_function' => 'platformsh_api_subscription_plan_options_list',
       ),
     );
     $fields['platformsh_license_plan']['instance'] = array(
@@ -92,7 +89,6 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
   public function isConfigurable() {
     // Allow the user to configure license fields on the Add to Cart form.
     // See the Commerce License docs: https://www.drupal.org/node/2039687
-    // @todo hide subscription field
     return TRUE;
   }
 
