@@ -7,10 +7,11 @@
 /**
  * Menu callback for Platform.sh to notify us of a successful subscription.
  *
- * @param \PlatformshApiCommerceSubscriptionLicense $license
- *   The subscription license entity.
+ * @param int $license_id
+ *   The subscription license entity ID.
  */
-function platformsh_api_commerce_activation_callback(\PlatformshApiCommerceSubscriptionLicense $license) {
+function platformsh_api_commerce_activation_callback($license_id) {
+  $license = entity_load_single('commerce_license', $license_id);
   // Only act if the license is not yet synchronized.
   if ($license->wrapper()->sync_status->value() !== COMMERCE_LICENSE_SYNCED) {
     if ($resource = $license->getSubscription()) {
@@ -29,13 +30,14 @@ function platformsh_api_commerce_activation_callback(\PlatformshApiCommerceSubsc
 /**
  * Check access for the subscription activation callback.
  *
- * @param \CommerceLicenseBase $license
- *   The subscription license entity.
+ * @param int $license_id
+ *   The subscription license entity ID.
  *
  * @return bool
  *   TRUE if access is granted, FALSE if denied.
  */
-function platformsh_api_commerce_activation_callback_access(\CommerceLicenseBase $license) {
+function platformsh_api_commerce_activation_callback_access($license_id) {
+  $license = entity_load_single('commerce_license', $license_id);
   if (!$license instanceof \PlatformshApiCommerceSubscriptionLicense) {
     return FALSE;
   }

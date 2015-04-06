@@ -9,7 +9,9 @@
  */
 function platformsh_api_commerce_menu() {
   $items = array();
-  $items['platformsh/activation-callback/%commerce_license'] = array(
+
+  // @todo when https://www.drupal.org/node/2458657 is committed, use %commerce_license
+  $items['platformsh/activation-callback/%'] = array(
     'title' => 'Subscription activation callback',
     'page callback' => 'platformsh_api_commerce_activation_callback',
     'page arguments' => array(2),
