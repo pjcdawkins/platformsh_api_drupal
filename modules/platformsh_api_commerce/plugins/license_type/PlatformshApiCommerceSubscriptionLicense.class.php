@@ -253,7 +253,15 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     // Wait for the subscription to become active.
     if (variable_get('platformsh_api_commerce_wait', TRUE)) {
       watchdog('platformsh_api_commerce', 'Waiting for subscription activation.');
-      $subscription->wait(NULL, 1);
+      try {
+        $subscription->wait(NULL, 1);
+      }
+      catch (\Exception $e) {
+        watchdog('platformsh_api_commerce', 'Exception caught while waiting for subscription activation on license @id: @message', array(
+          '@id' => $this->license_id,
+          '@message' => $e->getMessage(),
+        ), WATCHDOG_ERROR);
+      }
     }
 
     platformsh_api_save_resources(array($subscription), 'subscription', FALSE, $this->wrapper()->owner->value());
