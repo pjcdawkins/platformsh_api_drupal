@@ -72,3 +72,24 @@ function platformsh_api_commerce_get_token(\CommerceLicenseBase $license) {
 function platformsh_api_commerce_validate_token($token, \CommerceLicenseBase $license) {
   return $token === platformsh_api_commerce_get_token($license);
 }
+
+/**
+ * Get the activation callback URL.
+ *
+ * @param \CommerceLicenseBase $license
+ *   The subscription license entity.
+ *
+ * @return string
+ *   The absolute URL to the activation callback.
+ */
+function platformsh_api_commerce_get_activation_callback(\CommerceLicenseBase $license) {
+  return url(
+    'platformsh/activation-callback/' . $license->license_id,
+    array(
+      'absolute' => TRUE,
+      'query' => array(
+        'token' => platformsh_api_commerce_get_token($license),
+      ),
+    )
+  );
+}

@@ -215,13 +215,9 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
 
     $activation_callback = NULL;
     if (variable_get('platformsh_api_commerce_use_callback', TRUE)) {
+      module_load_include('inc', 'platformsh_api_commerce', 'includes/platformsh_api_commerce.activation_callback');
       $activation_callback = array(
-        'uri' => url('platformsh/activation-callback/' . $this->license_id, array(
-          'absolute' => TRUE,
-          'query' => array(
-            'token' => platformsh_api_commerce_get_token($this),
-          ),
-        )),
+        'uri' => platformsh_api_commerce_get_activation_callback($this),
       );
     }
 
