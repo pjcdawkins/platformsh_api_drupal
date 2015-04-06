@@ -104,7 +104,9 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       $link = $subscription->wrapper()->project_link->value();
       if ($link) {
         $output['project'] = array(
-          '#markup' => $link,
+          '#prefix' => '<span class="access-details">',
+          '#markup' => t('Project: !link', array('!link' => $link)),
+          '#suffix' => '</span>',
         );
       }
     }
@@ -252,6 +254,12 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       return;
     }
 
+    // Wait for the subscription to become active.
+    if (variable_get('platformsh_api_commerce_wait', TRUE)) {
+      watchdog('platformsh_api_commerce', 'Waiting for subscription activation.');
+      $subscription->wait(NULL, 1);
+    }
+
     platformsh_api_save_resources(array($subscription), 'subscription', FALSE, $this->wrapper()->owner->value());
     $resource = platformsh_api_load_resource_by_external_id($subscription->id, 'subscription');
     if (!$resource) {
@@ -306,7 +314,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
   }
 
   /**
-   * {@inheritdoc}.
+   * {@inheritdoc}
    */
   public function checkoutCompletionMessage() {
     $message = '';

@@ -16,7 +16,7 @@ function platformsh_api_commerce_menu() {
     'access callback' => 'platformsh_api_commerce_activation_callback_access',
     'access arguments' => array(2),
     'type' => MENU_CALLBACK,
-    'file' => 'includes/platformsh_api_commerce.pages.inc',
+    'file' => 'includes/platformsh_api_commerce.activation_callback.inc',
   );
 
   return $items;
@@ -42,31 +42,25 @@ function platformsh_api_commerce_field_access($op, $field, $entity_type, $entity
 }
 
 /**
- * Generate a token to validate the activation callback.
- *
- * @param \CommerceLicenseBase $license
- *   The subscription license entity.
- *
- * @return string
- *   A token.
+ * Implements hook_form_FORM_ID_alter().
  */
-function platformsh_api_commerce_get_token(\CommerceLicenseBase $license) {
-  $data = serialize(array($license->license_id, $license->uid));
-  $key = drupal_get_private_key() . '-' . drupal_get_hash_salt();
-  return drupal_hmac_base64($data, $key);
-}
-
-/**
- * Validate a token in the activation callback.
- *
- * @param string $token
- *   A token passed in the activation callback.
- * @param \CommerceLicenseBase $license
- *   The subscription license entity.
- *
- * @return bool
- *   TRUE if valid, FALSE otherwise.
- */
-function platformsh_api_commerce_validate_token($token, \CommerceLicenseBase $license) {
-  return $token === platformsh_api_commerce_get_token($license);
+function platformsh_api_commerce_form_platformsh_api_config_form_alter(&$form, &$form_state) {
+  $form['commerce'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Commerce integration'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['commerce']['platformsh_api_commerce_wait'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Wait for activation'),
+    '#description' => t('Wait for the subscription to become active during the initial synchronization.'),
+    '#default_value' => variable_get('platformsh_api_commerce_wait', TRUE),
+  );
+  $form['commerce']['platformsh_api_commerce_use_callback'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use activation callback'),
+    '#default_value' => variable_get('platformsh_api_commerce_use_callback', TRUE),
+    '#description' => t('Request a notification from Platform.sh after activation.'),
+  );
 }

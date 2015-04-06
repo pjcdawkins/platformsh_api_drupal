@@ -12,13 +12,14 @@ function platformsh_api_config_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('API token'),
     '#description' => t('You can get an API token from your Platform.sh account settings.'),
+    '#attributes' => array('autocomplete' => 'off'),
     '#required' => TRUE,
   );
 
   if (variable_get('platformsh_api_token')) {
     $form['platformsh_api_token']['#required'] = FALSE;
     $form['platformsh_api_token']['#description'] .= '<br />'
-      . t('Leave blank to use the already set token.');
+      . t('Leave blank to use the already saved token.');
   }
 
   $form['advanced'] = array(

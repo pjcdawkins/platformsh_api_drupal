@@ -1,0 +1,13 @@
+<?php
+/**
+ * @file
+ * Install/uninstall functions for the Platform.sh API Commerce module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function platformsh_api_commerce_uninstall() {
+  variable_del('platformsh_api_commerce_wait');
+  variable_del('platformsh_api_commerce_use_callback');
+}

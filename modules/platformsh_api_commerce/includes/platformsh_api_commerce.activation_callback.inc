@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Page callbacks for the Platform.sh API Commerce module.
+ * Functions related to the Platform.sh subscription activation callback.
  */
 
 /**
@@ -41,4 +41,34 @@ function platformsh_api_commerce_activation_callback_access(\CommerceLicenseBase
   }
 
   return isset($_GET['token']) && platformsh_api_commerce_validate_token($_GET['token'], $license);
+}
+
+/**
+ * Generate a token to validate the activation callback.
+ *
+ * @param \CommerceLicenseBase $license
+ *   The subscription license entity.
+ *
+ * @return string
+ *   A token.
+ */
+function platformsh_api_commerce_get_token(\CommerceLicenseBase $license) {
+  $data = serialize(array($license->license_id, $license->uid));
+  $key = drupal_get_private_key() . '-' . drupal_get_hash_salt();
+  return drupal_hmac_base64($data, $key);
+}
+
+/**
+ * Validate a token in the activation callback.
+ *
+ * @param string $token
+ *   A token passed in the activation callback.
+ * @param \CommerceLicenseBase $license
+ *   The subscription license entity.
+ *
+ * @return bool
+ *   TRUE if valid, FALSE otherwise.
+ */
+function platformsh_api_commerce_validate_token($token, \CommerceLicenseBase $license) {
+  return $token === platformsh_api_commerce_get_token($license);
 }
