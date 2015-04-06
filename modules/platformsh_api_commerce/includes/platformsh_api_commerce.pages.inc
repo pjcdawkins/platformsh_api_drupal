@@ -14,10 +14,12 @@ function platformsh_api_commerce_activation_callback(\PlatformshApiCommerceSubsc
   // Only act if the license is not yet synchronized.
   if ($license->wrapper()->sync_status->value() !== COMMERCE_LICENSE_SYNCED) {
     if ($resource = $license->getSubscription()) {
+      watchdog('platformsh_api_commerce', 'Refreshing subscription after activation callback.');
       /** @var \Platformsh\Client\Model\Subscription $subscription */
       $subscription = $resource->source();
       $subscription->refresh();
       $license->setStatusFromSubscription($subscription);
+      $license->wrapper()->save();
     }
   }
 
@@ -25,6 +27,8 @@ function platformsh_api_commerce_activation_callback(\PlatformshApiCommerceSubsc
 }
 
 /**
+ * Check access for the subscription activation callback.
+ *
  * @param \CommerceLicenseBase $license
  *   The subscription license entity.
  *

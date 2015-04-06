@@ -99,7 +99,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     $output = array();
 
     /** @var \PlatformshApiResource $subscription */
-    $subscription = $this->wrapper->platformsh_license_subscription->value();
+    $subscription = $this->wrapper()->platformsh_license_subscription->value();
     if ($subscription) {
       $link = $subscription->wrapper()->project_link->value();
       if ($link) {
@@ -158,9 +158,10 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
 
     $this->save();
 
-    watchdog('platformsh_api_commerce', 'Synced. Subscription status: @status1, license status: @status2', array(
+    watchdog('platformsh_api_commerce', 'Synced. Subscription status: @status1, sync status: @status2, license status: @status3', array(
       '@status1' => $subscription->getStatus(),
       '@status2' => $this->wrapper()->sync_status->value(),
+      '@status3' => $this->status,
     ));
   }
 
@@ -309,7 +310,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    */
   public function checkoutCompletionMessage() {
     $message = '';
-    $sync_status = $this->wrapper->sync_status->value();
+    $sync_status = $this->wrapper()->sync_status->value();
     switch ($sync_status) {
       case COMMERCE_LICENSE_NEEDS_SYNC:
         $message = t("Please wait while we create your Platform.sh project.");
