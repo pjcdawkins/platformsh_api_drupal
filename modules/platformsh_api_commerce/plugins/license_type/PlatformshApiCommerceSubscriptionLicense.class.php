@@ -99,7 +99,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
     $output = array();
 
     /** @var \PlatformshApiResource $subscription */
-    $subscription = $this->wrapper()->platformsh_license_subscription->value();
+    $subscription = $this->getSubscription();
     if ($subscription) {
       $link = $subscription->wrapper()->project_link->value();
       if ($link) {
@@ -122,7 +122,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       case COMMERCE_LICENSE_CREATED:
       case COMMERCE_LICENSE_PENDING:
       case COMMERCE_LICENSE_ACTIVE:
-        if ($resource = $this->wrapper()->platformsh_license_subscription->value()) {
+        if ($resource = $this->getSubscription()) {
           $this->synchronizeExistingSubscription($resource);
         }
         else {
@@ -290,30 +290,28 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
    *   Whether the subscription was successfully deleted.
    */
   protected function deleteSubscription() {
-    if ($resource = $this->wrapper()->platformsh_license_subscription->value()) {
+    if (!$resource = $this->getSubscription()) {
+      return FALSE;
+    }
 
-      watchdog('platformsh_api_commerce', 'Deleting subscription. License @id1, subscription @id2', array(
+    watchdog('platformsh_api_commerce', 'Deleting subscription. License @id1, subscription @id2', array(
+      '@id1' => $this->license_id,
+      '@id2' => $resource->external_id,
+    ));
+
+    try {
+      $resource->source()->delete();
+      $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNCED;
+
+      watchdog('platformsh_api_commerce', 'Deleted. License @id1, subscription @id2', array(
         '@id1' => $this->license_id,
         '@id2' => $resource->external_id,
       ));
-
-      try {
-        $resource->source()->delete();
-        $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNCED;
-
-        watchdog('platformsh_api_commerce', 'Deleted. License @id1, subscription @id2', array(
-          '@id1' => $this->license_id,
-          '@id2' => $resource->external_id,
-        ));
-      } catch (\GuzzleHttp\Exception\BadResponseException $e) {
-        $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED;
-      }
-
-      $this->save();
-      return TRUE;
+    } catch (\GuzzleHttp\Exception\BadResponseException $e) {
+      $this->wrapper()->sync_status = COMMERCE_LICENSE_SYNC_FAILED;
     }
 
-    return FALSE;
+    return $this->save();
   }
 
   /**
