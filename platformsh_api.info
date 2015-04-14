@@ -3,7 +3,7 @@ description = Integrate with the Platform.sh API
 core = 7.x
 php = 5.4
 dependencies[] = composer_manager
-dependencies[] = entity
+dependencies[] = entity (>=7.x-1.6)
 dependencies[] = views
 
 files[] = includes/PlatformshApiResource.php
