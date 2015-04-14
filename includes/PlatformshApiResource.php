@@ -13,15 +13,6 @@ class PlatformshApiResource extends Entity {
   protected $source;
 
   /**
-   * Get an entity metadata wrapper for the resource.
-   *
-   * @return \EntityMetadataWrapper
-   */
-  public function wrapper() {
-    return entity_metadata_wrapper('platformsh_api_resource', $this);
-  }
-
-  /**
    * Get the source object for the resource.
    *
    * @throws \Exception
