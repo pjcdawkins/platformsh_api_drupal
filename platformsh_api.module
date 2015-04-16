@@ -375,24 +375,24 @@ function platformsh_api_subscription_usage_getter(PlatformshApiResource $resourc
 }
 
 /**
- * Get a list of available Platform.sh clusters for the user to choose from.
+ * Get a list of available Platform.sh regions for the user to choose from.
  *
  * @return array
- *   An array of available clusters: the values are human-readable names, and
+ *   An array of available regions: the values are human-readable names, and
  *   the keys are machine names.
  */
-function platformsh_api_subscription_cluster_options_list() {
+function platformsh_api_subscription_region_options_list() {
   $names = array(
     'eu_west' => 'EU (West)',
     'us_east' => 'US (East)',
   );
-  $clusters = array();
-  foreach (\Platformsh\Client\Model\Subscription::$availableClusters as $key) {
+  $regions = array();
+  foreach (\Platformsh\Client\Model\Subscription::$availableRegions as $key) {
     $name = isset($names[$key]) ? $names[$key] : $key;
-    $clusters[$key] = $name;
+    $regions[$key] = $name;
   }
 
-  return $clusters;
+  return $regions;
 }
 
 /**
