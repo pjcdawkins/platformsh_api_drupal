@@ -28,17 +28,17 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
       'display' => array(),
     );
 
-    $fields['platformsh_license_cluster']['field'] = array(
+    $fields['platformsh_license_region']['field'] = array(
       'cardinality' => 1,
       'translatable' => FALSE,
       'module' => 'list',
       'type' => 'list_text',
       'settings' => array(
-        'allowed_values_function' => 'platformsh_api_subscription_cluster_options_list',
+        'allowed_values_function' => 'platformsh_api_subscription_region_options_list',
       ),
     );
-    $fields['platformsh_license_cluster']['instance'] = array(
-      'label' => t('Project cluster'),
+    $fields['platformsh_license_region']['instance'] = array(
+      'label' => t('Project region'),
       'required' => TRUE,
       'widget' => array(
         'active' => TRUE,
@@ -222,7 +222,7 @@ class PlatformshApiCommerceSubscriptionLicense extends CommerceLicenseRemoteBase
 
     try {
       $subscription = $client->createSubscription(
-        $this->wrapper()->platformsh_license_cluster->value(),
+        $this->wrapper()->platformsh_license_region->value(),
         $this->wrapper()->platformsh_license_plan->value(),
         $this->wrapper()->platformsh_license_project_title->value() ?: NULL,
         NULL,
