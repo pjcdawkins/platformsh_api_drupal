@@ -10,9 +10,9 @@
 function platformsh_api_commerce_menu() {
   $items = array();
 
-  // @todo when https://www.drupal.org/node/2458657 is committed, use %commerce_license
-  $items['platformsh/activation-callback/%'] = array(
+  $items['platformsh/activation-callback/%entity_object'] = array(
     'title' => 'Subscription activation callback',
+    'load arguments' => array('commerce_license'),
     'page callback' => 'platformsh_api_commerce_activation_callback',
     'page arguments' => array(2),
     'access callback' => 'platformsh_api_commerce_activation_callback_access',
@@ -70,14 +70,13 @@ function platformsh_api_commerce_form_platformsh_api_config_form_alter(&$form, &
 /**
  * Check access for the subscription activation callback.
  *
- * @param int $license_id
- *   The subscription license entity ID.
+ * @param object $license
+ *   The subscription license entity.
  *
  * @return bool
  *   TRUE if access is granted, FALSE if denied.
  */
-function platformsh_api_commerce_activation_callback_access($license_id) {
-  $license = entity_load_single('commerce_license', $license_id);
+function platformsh_api_commerce_activation_callback_access($license) {
   if (!$license instanceof \PlatformshApiCommerceSubscriptionLicense) {
     return FALSE;
   }
