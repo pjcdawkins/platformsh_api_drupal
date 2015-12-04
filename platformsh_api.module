@@ -383,8 +383,8 @@ function platformsh_api_subscription_usage_getter(PlatformshApiResource $resourc
  */
 function platformsh_api_subscription_region_options_list() {
   $names = array(
-    'eu_west' => 'EU (West)',
-    'us_east' => 'US (East)',
+    'eu.platform.sh' => 'EU',
+    'us.platform.sh' => 'US',
   );
   $regions = array();
   foreach (\Platformsh\Client\Model\Subscription::$availableRegions as $key) {
